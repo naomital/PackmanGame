@@ -45,15 +45,10 @@ public class MyFrame extends JFrame implements MouseListener{
 	private Packman player;
 	private Game _game;
 	private Image pacmanIcon, dountIcon, playerGui, goust;
-    private ConvertFactory conv;
+	private ConvertFactory conv;
 
 	public  MyFrame(){
 		super("Game");
-		double mapLongitudeStart =  35.202574, mapLatitudeStart = 32.106046;
-		// length of map in long/lat
-		double mapLongitude = 35.212405 -mapLongitudeStart, 
-				// invert because it decreases as you go down
-				mapLatitude = mapLatitudeStart - 32.101858  ;
 
 		this.setLayout(new FlowLayout());
 		this.setBounds(0, 0, 1300, 642);
@@ -63,7 +58,7 @@ public class MyFrame extends JFrame implements MouseListener{
 		Point3D center = new Point3D(this.getWidth()/2, this.getHeight()/2, 0);
 		System.out.println("CENTER1: "+center);
 		LatLonAlt latlonalt = new LatLonAlt(center.ix(), center.iy(), 0);
-		
+
 		System.out.println("CENTER2: "+latlonalt.toString());
 		conv= new ConvertFactory();
 		map= new Map();
@@ -138,49 +133,50 @@ public class MyFrame extends JFrame implements MouseListener{
 	public synchronized void paint(Graphics g)
 	{
 		g.drawImage(image, 0, 0,this.getWidth(),this.getHeight(), this);
-		
-		
+
+
 		if(player != null) {
 			g.setColor(Color.PINK);
 			Point3D p= conv.GpsToPicsel(player.getLocation(), this.getWidth(),this.getHeight() );
 			g.drawImage(playerGui, (int)p.x(),(int) p.y(), this);
-		//	g.fillOval((int)p.x(),(int)p.y(), 15, 15);
+			//	g.fillOval((int)p.x(),(int)p.y(), 15, 15);
 			System.out.println("test3: "+player.getLocation());
 
 			System.out.println("x:"+player.getLocation().lat());
 			System.out.println("y:"+player.getLocation().lon());
 
-		//	g.drawOval(player.getLocation().ix(), player.getLocation().iy(), width, height);
-			
-		}
-//                for(int i=0; i<_game.sizeB();i++) {
-//                	_game.getBox(i).getMax().;
-//                	g.fillRect(i, i, width, height);
-//                }
-if(_game!= null) {
-//    if(_game.getTargets().size()>0) {
-//		Iterator<Fruit> itr0= _game.getTargets().iterator();
-//
-//				//draw all the dounts to the screen: 
-//				while(itr0.hasNext()) {
-//					Fruit fruit = (Fruit)itr0.next();
-//					Point3D p = map.world2frame(fruit.getLocation());  
-//					g.drawString("("+Integer.toString(x)+", "+Integer.toString(y)+")",x,y-10);
-//					g.drawImage(goust, (int)p.x(),(int) p.y(), this);
-//				}
-//		
-//				//draw all the pacman to the screen:
-//		
-//				System.out.println("****");
-//    }
-    if(_game.sizeR()>0) {
-		Iterator<Packman> itr1 = _game.getRobots().iterator();
+			//	g.drawOval(player.getLocation().ix(), player.getLocation().iy(), width, height);
 
-    
+		}
+		if(_game!= null) {
+		                for(int i=0; i<_game.sizeB();i++) {
+		                	//_game.getBox(i).getMax().;
+		                	Point3D p0=conv.GpsToPicsel(_game.getBox(i).getMax(), this.getWidth(), this.getHeight());
+		                	Point3D p1=conv.GpsToPicsel(_game.getBox(i).getMin(), this.getWidth(), this.getHeight());
+		                	g.fillRect(p0.ix(), p1.iy(), p0.ix()-p1.ix(), p0.iy()-p0.iy());
+		                }
+	
+			if(_game.getTargets().size()>0) {
+				Iterator<Fruit> itr0= _game.getTargets().iterator();
+
+				//draw all the dounts to the screen: 
+				while(itr0.hasNext()) {
+					Fruit fruit = (Fruit)itr0.next();
+					Point3D p = conv.GpsToPicsel(fruit.getLocation(), this.getWidth(),this.getHeight() );
+					g.drawString("("+Integer.toString(x)+", "+Integer.toString(y)+")",x,y-10);
+					g.drawImage(dountIcon, (int)p.x(),(int) p.y(), this);
+				}
+
+				//draw all the pacman to the screen:
+
+				System.out.println("****");
+			}
+			if(_game.sizeR()>0) {
+				Iterator<Packman> itr1 = _game.getRobots().iterator();
 				while(itr1.hasNext()) 
 				{
 					Packman packman = (Packman)itr1.next();
-				//	LatLonAlt lla = new LatLonAlt(packman.getLocation().lat(), packman.getLocation().lon(), 0);
+					//	LatLonAlt lla = new LatLonAlt(packman.getLocation().lat(), packman.getLocation().lon(), 0);
 					//System.out.println(lla);
 					System.out.println("test1: "+packman.getLocation());
 
@@ -189,32 +185,41 @@ if(_game!= null) {
 					g.drawString("("+Integer.toString(x)+", "+Integer.toString(y)+")",x,y-10);
 					g.drawImage(pacmanIcon, (int)p.x(),(int) p.y(), this);
 				}
-		
+
 				System.out.println("****");
-    }
-    if(_game.sizeG()>0) {
-		Iterator<Packman> itr2 = _game.getGhosts().iterator();
-		while(itr2.hasNext()) {
-		Packman packman = (Packman)itr2.next();
-		System.out.println("test2: "+packman.getLocation());
-		Point3D p = conv.GpsToPicsel(packman.getLocation(), this.getWidth(),this.getHeight() );
-		System.out.println(p);
-		g.drawString("("+Integer.toString(x)+", "+Integer.toString(y)+")",x,y-10);
-		g.drawImage(pacmanIcon, (int)p.x(),(int) p.y(), this);
-    }
-    }
-}
+			}
+			if(_game.sizeG()>0) {
+				g.setColor(Color.green);
+
+				Iterator<Packman> itr2 = _game.getGhosts().iterator();
+				while(itr2.hasNext()) {
+					Packman packman = (Packman)itr2.next();
+					System.out.println("test2: "+packman.getLocation());
+					Point3D p = conv.GpsToPicsel(packman.getLocation(), this.getWidth(),this.getHeight() );
+					System.out.println(p);
+					g.drawString("("+Integer.toString(x)+", "+Integer.toString(y)+")",x,y-10);
+					//g.drawImage(goust, (int)p.x(),(int) p.y(), this);
+					g.fillOval((int)p.x(),(int)p.y(), 15, 15);
+				}
+			}
+		}
 	}
 
 	@Override
 	public void mouseClicked(MouseEvent event) {
+		
+		
+	}
+
+	@Override
+	public void mouseEntered(MouseEvent event) {
 		System.out.println("mouse clicked!");
 		x = event.getX();
 		y = event.getY();
 		System.out.println("X: "+x+" , "+"Y: "+y);
 		Point3D p = new Point3D(x, y,0);
 		Point3D p1 =  conv.PicselToGps(p, this.getWidth(), this.getHeight());
-		LatLonAlt latlonalt= new LatLonAlt(p1.x(),p.y(),p.z());
+		LatLonAlt latlonalt= new LatLonAlt(p1.x(),p1.y(),p1.z());
 		if(option==1 && player == null) {
 			System.out.println("I am in");
 			player = new Packman(latlonalt, 100.0D);
@@ -222,12 +227,6 @@ if(_game!= null) {
 			option=0;
 			repaint();
 		}
-	}
-
-	@Override
-	public void mouseEntered(MouseEvent arg0) {
-		// TODO Auto-generated method stub
-
 	}
 
 
