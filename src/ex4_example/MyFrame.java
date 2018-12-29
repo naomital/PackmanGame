@@ -17,6 +17,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Iterator;
 
 import javax.swing.JFileChooser;
@@ -107,7 +108,31 @@ public class MyFrame extends JFrame implements MouseListener{
 		startGame.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				//play.start();
+				play.start();
+				// 7) "Play" as long as there are "fruits" and time
+				for(int i=0;i<10;i++) {
+					
+				// 7.1) this is the main command to the player (on the server side)
+					play.rotate(36*i); 
+					System.out.println("***** "+i+"******");
+					
+				// 7.2) get the current score of the game
+					String info = play.getStatistics();
+					System.out.println(info);
+				// 7.3) get the game-board current state
+					ArrayList<String> board_data = play.getBoard();
+					for(int a=0;a<board_data.size();a++) {
+						System.out.println(board_data.get(a));
+					}
+					System.out.println();
+				}
+				// 8) stop the server - not needed in the real implementation.
+				play.stop();
+				System.out.println("**** Done Game (user stop) ****");
+				
+				// 9) print the data & save to the course DB
+				String info = play.getStatistics();
+				System.out.println(info);
 			}
 
 		});

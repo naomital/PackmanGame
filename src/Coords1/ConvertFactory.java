@@ -60,9 +60,9 @@ public class ConvertFactory {
 	 * @return- gps point
 	 */
 	public Point3D PicselToGps(Point3D picsel, double width, double height) {
-		double y= ((mapLatitude*picsel.x())/width)+mapLongitudeStart;
-		double x= -((mapLongitude*picsel.y() )/height)+mapLatitudeStart;
-		return new Point3D(x,y);
+		double y= ( mapLongitude*(picsel.x()/width));
+		double x= (mapLatitude*(picsel.y() /height));
+		return new Point3D(x+ startPoint.x(),y +startPoint.y() );
 	}
 	/**
 	 * function distancePicsel-Calculates the distance between two pixel points by converting 
