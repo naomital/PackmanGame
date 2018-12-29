@@ -45,16 +45,16 @@ public class MyFrame extends JFrame implements MouseListener{
 	private int option;
 	private Packman player;
 	private Game _game;
-	private Image pacmanIcon, dountIcon, playerGui, goust;
+	private Image pacmanIcon, dountIcon, playerGui, ghost;
 	private ConvertFactory conv;
 
 	public  MyFrame(){
 		super("Game");
 
 		this.setLayout(new FlowLayout());
-		this.setBounds(0, 0, 1297, 642);
+		this.setBounds(0, 0, 1433, 642);
 		Dimension screenSize = new Dimension();
-		screenSize.setSize(1297, 642);
+		screenSize.setSize(1433, 642);
 		this.setPreferredSize(screenSize);
 		Point3D center = new Point3D(this.getWidth()/2, this.getHeight()/2, 0);
 		System.out.println("CENTER1: "+center);
@@ -62,16 +62,16 @@ public class MyFrame extends JFrame implements MouseListener{
 
 		System.out.println("CENTER2: "+latlonalt.toString());
 		conv= new ConvertFactory();
-		map= new Map();
+		map = new Map();
 		this.image = map.getImg();
 		this.setLayout(new FlowLayout());
 		this.pacmanIcon = Toolkit.getDefaultToolkit().getImage("icons\\pacman.png");
 		this.dountIcon = Toolkit.getDefaultToolkit().getImage("icons\\dount.png");
-		this.playerGui=Toolkit.getDefaultToolkit().getImage("icons\\250px-133Eevee.png");
-		this.goust=Toolkit.getDefaultToolkit().getImage("icons\\Gengar.png");
+		this.playerGui=Toolkit.getDefaultToolkit().getImage("icons\\EeveePlayer.png");
+		this.ghost=Toolkit.getDefaultToolkit().getImage("icons\\GengarGhost.png");
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		openFileChosser= new JFileChooser();
-		openFileChosser.setCurrentDirectory(new File("C:\\Users\\n&e\\eclipse-workspace\\Ex4_OOP"));
+		openFileChosser.setCurrentDirectory(new File("C:\\Users\\עדי\\eclipse-workspace\\Ex4_OOP"));
 		pack();
 	}
 	public void initGui() {
@@ -137,10 +137,11 @@ public class MyFrame extends JFrame implements MouseListener{
 
 
 		if(player != null) {
-		//	g.setColor(Color.PINK);
-			Point3D p= conv.GpsToPicsel(player.getLocation(), this.getWidth(),this.getHeight() );
-			g.drawImage(playerGui,(int)p.x(), (int)p.y(), this);
-			//	g.fillOval((int)p.x(),(int)p.y(), 15, 15);
+			Point3D p = new Point3D(player.getLocation().lat(), player.getLocation().lon(), player.getLocation().alt());
+			Point3D p1= conv.GpsToPicsel(p, this.getWidth(),this.getHeight());
+			System.out.println(p.toString());
+			g.drawString("("+Integer.toString(x)+", "+Integer.toString(y)+")",x,y-10);
+			g.drawImage(playerGui,(int)p1.x(),(int)p1.y(), this);
 			System.out.println("test3: "+player.getLocation());
 
 			//	g.drawOval(player.getLocation().ix(), player.getLocation().iy(), width, height);
@@ -203,7 +204,6 @@ public class MyFrame extends JFrame implements MouseListener{
 				while(itr0.hasNext()) {
 					Fruit fruit = (Fruit)itr0.next();
 					Point3D p = conv.GpsToPicsel(fruit.getLocation(), this.getWidth(),this.getHeight() );
-					g.drawString("("+Integer.toString(x)+", "+Integer.toString(y)+")",x,y-10);
 					g.drawImage(dountIcon, (int)p.x(),(int) p.y(), this);
 				}
 
@@ -223,7 +223,6 @@ public class MyFrame extends JFrame implements MouseListener{
 					LatLonAlt lla = new LatLonAlt(packman.getLocation().lat(), packman.getLocation().lon(),packman.getLocation().alt());
 					Point3D p = conv.GpsToPicsel(lla, this.getWidth(),this.getHeight() );
 					System.out.println(p);
-					g.drawString("("+Integer.toString(x)+", "+Integer.toString(y)+")",x,y-10);
 					g.drawImage(pacmanIcon, (int)p.ix(),(int) p.iy(), this);
 				}
 
@@ -239,9 +238,7 @@ public class MyFrame extends JFrame implements MouseListener{
 					System.out.println("test2: "+packman.getLocation());
 					Point3D p = conv.GpsToPicsel(packman.getLocation(), this.getWidth(),this.getHeight() );
 					System.out.println(p);
-					g.drawString("("+Integer.toString(x)+", "+Integer.toString(y)+")",x,y-10);
-					g.drawImage(goust, (int)p.x(),(int) p.y(), this);
-					//g.fillOval((int)p.x(),(int)p.y(), 15, 15);
+					g.drawImage(ghost, (int)p.x(),(int) p.y(), this);
 				}
 			}
 		}
@@ -257,9 +254,9 @@ public class MyFrame extends JFrame implements MouseListener{
 		Point3D p = new Point3D(x, y,0);
 		Point3D p1 =  conv.PicselToGps(p, this.getWidth(), this.getHeight());
 		LatLonAlt latlonalt= new LatLonAlt(p1.x(),p1.y(),p1.z());
-		if(option==1) {
+		if(option==1 && _game != null) {
 			System.out.println("I am in");
-			player = new Packman(latlonalt, 100.0D);
+			this.player = new Packman(latlonalt, 100.0D);
 			_game.setPlayer(player);
 			option=0;
 			repaint();
@@ -274,10 +271,7 @@ public class MyFrame extends JFrame implements MouseListener{
 
 
 	@Override
-	public void mouseExited(MouseEvent arg0) {
-		// TODO Auto-generated method stub
-
-	}
+	public void mouseExited(MouseEvent arg0) {}
 
 
 
@@ -290,7 +284,6 @@ public class MyFrame extends JFrame implements MouseListener{
 
 	@Override
 	public void mouseReleased(MouseEvent arg0) {
-		// TODO Auto-generated method stub
 
 	}
 

@@ -24,12 +24,12 @@ public class ConvertFactory {
 	// offsets
 	static final double mapLongitudeStart =  35.202574, mapLatitudeStart = 32.106046;
 	// length of map in long/lat
-	static final double mapLongitude = 35.212405 -mapLongitudeStart, 
+	static final double mapLongitude = mapLongitudeStart - 35.212405, 
 			// invert because it decreases as you go down
-			mapLatitude = mapLatitudeStart - 32.101858  ;
+			mapLatitude = 32.101858 - mapLatitudeStart;
 
-	public Point3D startPoint = new Point3D(35.202574,32.106046);
-	public Point3D endPoint = new Point3D(35.212405,32.101858);
+	public Point3D startPoint = new Point3D(32.106046, 35.202574);
+	public Point3D endPoint = new Point3D(32.101858, 35.212405);
 
 	/**constructor */
 	public ConvertFactory(){
@@ -42,7 +42,7 @@ public class ConvertFactory {
 	 * @return - pixel point
 	 */
 	public Point3D GpsToPicsel(Point3D gps, double width, double height) {
-		Point3D GPS=new Point3D( gps.y() - mapLongitudeStart,mapLatitudeStart-gps.x(),0);
+		Point3D GPS=new Point3D(gps.x() - mapLatitudeStart ,gps.y() - 35.212405,0);
 		// use offsets
 		// do inverse because the latitude increases as we go up but the y decreases as we go up.
 		// if we didn't do the inverse then all the y values would be negative.
@@ -82,7 +82,6 @@ public class ConvertFactory {
 		MyCoords myCoords= new MyCoords();
 		return myCoords.distance3d(gps0, gps1);		
 	}
-	
-	
+
 
 }

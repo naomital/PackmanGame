@@ -17,8 +17,7 @@ import Geom.Point3D;
 public class Map{
 	private BufferedImage img;
 	private ConvertFactory cf;
-	private int frameWidth;
-	private int frameHeigth;
+
 	//private String path;  
 	/**
 	 * constructor for map that try to read an Image and calls ImageFactory to handle the image functionality.
