@@ -13,6 +13,8 @@ import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.image.BufferedImage;
@@ -48,7 +50,7 @@ public class MyFrame extends JFrame implements MouseListener{
 	private Game _game;
 	private Image pacmanIcon, dountIcon, playerGui, ghost;
 	private ConvertFactory conv;
-
+	private double ang = 0;
 	public  MyFrame(){
 		super("Game");
 
@@ -105,31 +107,41 @@ public class MyFrame extends JFrame implements MouseListener{
 		//***start game #3: 
 		startGame = new MenuItem("Start!");
 		menu.add(startGame); // the menu adds this item
+		this.addKeyListener(new keyListener()); // start listening for ENTER key
 		startGame.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				play.start();
+				play = new Play(_game);
+				play.start(); // Defualt time is 100,000 milliseconds, default speed of player is 20
+
 				// 7) "Play" as long as there are "fruits" and time
-				for(int i=0;i<10;i++) {
+
+				while( (_game.sizeT()>0)) {
+					// 7.0)
+
 					
-				// 7.1) this is the main command to the player (on the server side)
-					play.rotate(36*i); 
-					System.out.println("***** "+i+"******");
-					
-				// 7.2) get the current score of the game
+					// 7.1) this is the main command to the player (on the server side)
+					Packman pTemp = new Packman(player);
+					pTemp.move(ang*36); // check with temp player if the next planned move is valid.
+					while(!pTemp.getLocation().isValid()) { ang = (ang + 1) % 10; } // try to find where not to walk
+					play.rotate(36*ang); // seet the angle for the player and move it
+					repaint(); // repaint the board
+
+					// 7.2) get the current score of the game
 					String info = play.getStatistics();
 					System.out.println(info);
-				// 7.3) get the game-board current state
+					// 7.3) get the game-board current state
 					ArrayList<String> board_data = play.getBoard();
 					for(int a=0;a<board_data.size();a++) {
 						System.out.println(board_data.get(a));
 					}
 					System.out.println();
+					currTime = System.currentTimeMillis();
 				}
 				// 8) stop the server - not needed in the real implementation.
 				play.stop();
 				System.out.println("**** Done Game (user stop) ****");
-				
+
 				// 9) print the data & save to the course DB
 				String info = play.getStatistics();
 				System.out.println(info);
@@ -146,10 +158,10 @@ public class MyFrame extends JFrame implements MouseListener{
 
 	private void openFile() {
 		int returnValue = openFileChosser.showOpenDialog(this);
-		if(returnValue==openFileChosser.APPROVE_OPTION) {
+		if(returnValue==JFileChooser.APPROVE_OPTION) {
 			try {
 				_game =  new Game(openFileChosser.getSelectedFile().getPath());
-				//play = new Play(_game);
+
 			}catch(Exception e) {}		
 		}
 		//play.setIDs(207642638, 313245268);
@@ -175,14 +187,14 @@ public class MyFrame extends JFrame implements MouseListener{
 		if(_game!= null) {
 			if(_game.sizeB()>0) {
 				double upperY, lowerY, leftX, rightX;
-				
+
 				//for testing the size: 
 				System.out.println("Size of boxes: "+_game.sizeB());
-				
+
 				for(int i=0; i<_game.sizeB();i++) {
-					
+
 					System.out.println("BOX: "+_game.getBox(i).toString());
-					
+
 					//check size of the rectangle: 
 					if(_game.getBox(i).getMax().y() > _game.getBox(i).getMin().y()) {
 						upperY =  _game.getBox(i).getMin().y();
@@ -200,24 +212,24 @@ public class MyFrame extends JFrame implements MouseListener{
 						rightX = _game.getBox(i).getMin().x();
 						leftX = _game.getBox(i).getMax().x();
 					}
-					
+
 					Point3D p1 = new Point3D(leftX, upperY, 0);
 					Point3D p2 = new Point3D(rightX, upperY, 0);
 					Point3D p3 = new Point3D(leftX, lowerY, 0);
 					Point3D p4 = new Point3D(rightX, lowerY, 0);
-					
-					Point3D p5 = conv.GpsToPicsel(p1, this.getWidth(), this.getHeight());
-				    Point3D p6 = conv.GpsToPicsel(p2, this.getWidth(), this.getHeight());
-				    Point3D p7 = conv.GpsToPicsel(p3, this.getWidth(), this.getHeight());
-				    Point3D p8 = conv.GpsToPicsel(p4, this.getWidth(), this.getHeight());
 
-				    //for testing with painter the pixels:
-				    System.out.println("P1: "+p5);
-				    System.out.println("P2 "+ p6);
-				    System.out.println("P3 "+p7);
-				    System.out.println("P4 "+p8);
-				    
-				    g.setColor(Color.BLACK);
+					Point3D p5 = conv.GpsToPicsel(p1, this.getWidth(), this.getHeight());
+					Point3D p6 = conv.GpsToPicsel(p2, this.getWidth(), this.getHeight());
+					Point3D p7 = conv.GpsToPicsel(p3, this.getWidth(), this.getHeight());
+					Point3D p8 = conv.GpsToPicsel(p4, this.getWidth(), this.getHeight());
+
+					//for testing with painter the pixels:
+					System.out.println("P1: "+p5);
+					System.out.println("P2 "+ p6);
+					System.out.println("P3 "+p7);
+					System.out.println("P4 "+p8);
+
+					g.setColor(Color.BLACK);
 					g.fillRect((int)p6.x(), (int)p6.y(), (int)p7.x() - (int)p6.ix(), (int)p7.y() - (int)p6.y());
 				}
 			}
@@ -290,7 +302,7 @@ public class MyFrame extends JFrame implements MouseListener{
 
 	@Override
 	public void mouseEntered(MouseEvent event) {
-		
+
 	}
 
 
@@ -318,5 +330,24 @@ public class MyFrame extends JFrame implements MouseListener{
 		f.setVisible(true);
 	}
 
+
+
+	// /---Key Listener---///
+	private class keyListener implements KeyListener
+	{
+		public void keyPressed(KeyEvent ke)
+		{
+			if (ke.getKeyCode() == KeyEvent.VK_ENTER)
+			{
+				ang = (ang + 1) % 10; // circle until 10. 
+				System.out.println("***** "+ang+"******");
+			}
+		}
+
+		public void keyReleased(KeyEvent ke){}
+
+		public void keyTyped(KeyEvent ke){}
+
+	}
 
 }
