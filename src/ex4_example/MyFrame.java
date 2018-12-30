@@ -126,41 +126,16 @@ public class MyFrame extends JFrame implements MouseListener{
 							
 						}
 					}
+					//play.stop();
+					System.out.println("**** Done Game (user stop) ****");
+					String info = play.getStatistics();
+					System.out.println(info);
 				}
               };
               thread.start();
-				
-				
-				// 7) "Play" as long as there are "fruits" and time
-
-//				while( (_game.sizeT()>0)) {
-//					// 7.0)
-//
-//					
-//					// 7.1) this is the main command to the player (on the server side)
-//					Packman pTemp = new Packman(player);
-//					pTemp.move(ang*36); // check with temp player if the next planned move is valid.
-//					while(!pTemp.getLocation().isValid()) { ang = (ang + 1) % 10; } // try to find where not to walk
-//					play.rotate(36*ang); // seet the angle for the player and move it
-//					repaint(); // repaint the board
-//
-//					// 7.2) get the current score of the game
-//					String info = play.getStatistics();
-//					System.out.println(info);
-//					// 7.3) get the game-board current state
-//					ArrayList<String> board_data = play.getBoard();
-//					for(int a=0;a<board_data.size();a++) {
-//						System.out.println(board_data.get(a));
-//					}
-//					System.out.println();
-//				}
-//				// 8) stop the server - not needed in the real implementation.
-//				play.stop();
-//				System.out.println("**** Done Game (user stop) ****");
-//
-//				// 9) print the data & save to the course DB
-//				String info = play.getStatistics();
-//				System.out.println(info);
+		
+			
+			
 		}
 
 		});
@@ -331,8 +306,9 @@ public class MyFrame extends JFrame implements MouseListener{
 
 
 	@Override
-	public void mousePressed(MouseEvent arg0) {
-
+	public void mousePressed(MouseEvent event) {
+		
+	
 	}
 
 
@@ -344,9 +320,10 @@ public class MyFrame extends JFrame implements MouseListener{
 		System.out.println("X: "+x+" , "+"Y: "+y);
 		Point3D p = new Point3D(x, y,0);
 		Point3D p1 =  conv.PicselToGps(p, this.getWidth(), this.getHeight());
-		
 		double [] flag= new MyCoords().azimuth_elevation_dist( _game.getPlayer().getLocation(),p1);
 		this.azimut=(int) flag[0];
+		
+		
 	}
 
 //	public void mousemove(MouseEvent event) {
