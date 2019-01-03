@@ -1,8 +1,10 @@
-package ex4_example;
+package GUI;
+
 
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.Menu;
@@ -25,6 +27,7 @@ import java.util.Iterator;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 
+import Algo.AlgoPlayer;
 import Coords.LatLonAlt;
 import Coords1.ConvertFactory;
 import Coords1.Map;
@@ -44,7 +47,7 @@ public class MyFrame extends JFrame implements MouseListener{
 	private BufferedImage image;
 	private Play play;
 	private JFileChooser openFileChosser;
-	private MenuItem openFile,menuPlayer, startGame;
+	private MenuItem openFile,menuPlayer, startGame, startAlgo;
 	private int x ,y;
 	private int option;
 	private Packman player;
@@ -53,6 +56,9 @@ public class MyFrame extends JFrame implements MouseListener{
 	private ConvertFactory conv;
 	private double ang = 0;
 	private double azimut;
+	private String info="" ;
+	private Font font= new Font("Ariel",Font.BOLD,18);
+	private AlgoPlayer algoPlayer;
 	public  MyFrame(){
 		super("Game");
 
@@ -114,31 +120,73 @@ public class MyFrame extends JFrame implements MouseListener{
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				play = new Play(_game);
+				play.setIDs(207642638, 313245268);
 				play.start(); // Defualt time is 100,000 milliseconds, default speed of player is 20
-              Thread thread =new Thread() {
-				public void run() {
-					while(play.isRuning()) {
-						play.rotate(azimut);
-						try {
-							Thread.sleep(50);
-							repaint();
-						}catch(Exception e){
-							
+				Thread thread =new Thread() {
+					public void run() {
+						while(play.isRuning()) {
+							play.rotate(azimut);
+							try {
+								Thread.sleep(50);
+								repaint();
+							}catch(Exception e){
+
+							}
 						}
+						//play.stop();
+						System.out.println("** Done Game (user stop) **");
+						info = play.getStatistics();
+						System.out.println(info);
 					}
-					//play.stop();
-					System.out.println("**** Done Game (user stop) ****");
-					String info = play.getStatistics();
-					System.out.println(info);
-				}
-              };
-              thread.start();
-		
-			
-			
-		}
+				};
+				thread.start();
+
+
+
+			}
 
 		});
+		//***start game #3: 
+		startAlgo = new MenuItem("Start player's algorithm!");
+		menu.add(startAlgo); // the menu adds this item
+		this.addKeyListener(new keyListener()); // start listening for ENTER key
+		startAlgo.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				play = new Play(_game);
+
+				play.setIDs(207642638, 313245268);
+				play.start(); // Default time is 100,000 milliseconds, default speed of player is 20
+				Thread thread =new Thread() {
+					public void run() {
+						while(play.isRuning()) {
+							azimut = algoPlayer.theNextStep();
+							play.rotate(azimut);
+							info = play.getStatistics();
+							System.out.println(info);
+							try {
+								Thread.sleep(50);
+								repaint();
+							}catch(Exception e){
+
+							}
+
+						}
+						//play.stop();
+						System.out.println("** Done Game (user stop) **");
+
+
+
+					}
+				};
+				thread.start();
+
+
+
+			}
+
+		});
+
 
 
 
@@ -155,21 +203,23 @@ public class MyFrame extends JFrame implements MouseListener{
 
 			}catch(Exception e) {}		
 		}
-		//play.setIDs(207642638, 313245268);
-
-
+		algoPlayer= new AlgoPlayer(this);
 	}
 	public synchronized void paint(Graphics g)
 	{
-		g.drawImage(image, 0, 0,this.getWidth(),this.getHeight(), this);
-
+		Image img = createImage(5000,5000);
+		Graphics g1 = img.getGraphics();
+		g1.drawImage(image, 0, 0,getWidth(),getHeight(), this);
+		g1.setFont(font);
+		g1.setColor(Color.white);
+		g1.drawString(info,60,620);
 
 		if(player != null) {
 			Point3D p = new Point3D(player.getLocation().lat(), player.getLocation().lon(), player.getLocation().alt());
 			Point3D p1= conv.GpsToPicsel(p, this.getWidth(),this.getHeight());
 			System.out.println(p.toString());
-			g.drawString("("+Integer.toString(x)+", "+Integer.toString(y)+")",x,y-10);
-			g.drawImage(playerGui,(int)p1.x(),(int)p1.y(), this);
+			g1.drawString("("+Integer.toString(x)+", "+Integer.toString(y)+")",x,y-10);
+			g1.drawImage(playerGui,(int)p1.x(),(int)p1.y(), this);
 			System.out.println("test3: "+player.getLocation());
 
 			//	g.drawOval(player.getLocation().ix(), player.getLocation().iy(), width, height);
@@ -220,8 +270,8 @@ public class MyFrame extends JFrame implements MouseListener{
 					System.out.println("P3 "+p7);
 					System.out.println("P4 "+p8);
 
-					g.setColor(Color.BLACK);
-					g.fillRect((int)p6.x(), (int)p6.y(), (int)p7.x() - (int)p6.ix(), (int)p7.y() - (int)p6.y());
+					g1.setColor(Color.BLACK);
+					g1.fillRect((int)p6.x(), (int)p6.y(), (int)p7.x() - (int)p6.ix(), (int)p7.y() - (int)p6.y());
 				}
 			}
 			if(_game.getTargets().size()>0) {
@@ -232,12 +282,12 @@ public class MyFrame extends JFrame implements MouseListener{
 				while(itr0.hasNext()) {
 					Fruit fruit = (Fruit)itr0.next();
 					Point3D p = conv.GpsToPicsel(fruit.getLocation(), this.getWidth(),this.getHeight() );
-					g.drawImage(dountIcon, (int)p.x(),(int) p.y(), this);
+					g1.drawImage(dountIcon, (int)p.x(),(int) p.y(), this);
 				}
 
 				//draw all the pacman to the screen:
 
-				System.out.println("****");
+				System.out.println("**");
 			}
 			if(_game.sizeR()>0) {
 				System.out.println("Size of Packmans: "+_game.sizeR());
@@ -251,14 +301,14 @@ public class MyFrame extends JFrame implements MouseListener{
 					LatLonAlt lla = new LatLonAlt(packman.getLocation().lat(), packman.getLocation().lon(),packman.getLocation().alt());
 					Point3D p = conv.GpsToPicsel(lla, this.getWidth(),this.getHeight() );
 					System.out.println(p);
-					g.drawImage(pacmanIcon, (int)p.ix(),(int) p.iy(), this);
+					g1.drawImage(pacmanIcon, (int)p.ix(),(int) p.iy(), this);
 				}
 
-				System.out.println("****");
+				System.out.println("**");
 			}
 			if(_game.sizeG()>0) {
 				System.out.println("Size of Ghosts: "+_game.getGhosts().size());
-				g.setColor(Color.green);
+				g1.setColor(Color.green);
 
 				Iterator<Packman> itr2 = _game.getGhosts().iterator();
 				while(itr2.hasNext()) {
@@ -266,10 +316,12 @@ public class MyFrame extends JFrame implements MouseListener{
 					System.out.println("test2: "+packman.getLocation());
 					Point3D p = conv.GpsToPicsel(packman.getLocation(), this.getWidth(),this.getHeight() );
 					System.out.println(p);
-					g.drawImage(ghost, (int)p.x(),(int) p.y(), this);
+					g1.drawImage(ghost, (int)p.x(),(int) p.y(), this);
 				}
 			}
 		}
+
+		g.drawImage(img,0,0,this);
 	}
 
 	@Override
@@ -287,15 +339,15 @@ public class MyFrame extends JFrame implements MouseListener{
 			this.player = new Packman(latlonalt, 100.0D);
 			_game.setPlayer(player);
 			option=0;
-			
+
 		}
-	
+
 		repaint();
 	}
 
 	@Override
 	public void mouseEntered(MouseEvent event) {
-		
+
 	}
 
 
@@ -307,8 +359,8 @@ public class MyFrame extends JFrame implements MouseListener{
 
 	@Override
 	public void mousePressed(MouseEvent event) {
-		
-	
+
+
 	}
 
 
@@ -322,13 +374,13 @@ public class MyFrame extends JFrame implements MouseListener{
 		Point3D p1 =  conv.PicselToGps(p, this.getWidth(), this.getHeight());
 		double [] flag= new MyCoords().azimuth_elevation_dist( _game.getPlayer().getLocation(),p1);
 		this.azimut=(int) flag[0];
-		
-		
+
+
 	}
 
-//	public void mousemove(MouseEvent event) {
-//		
-//	}
+	//	public void mousemove(MouseEvent event) {
+	//		
+	//	}
 
 	public static void main(String[] args) {
 		MyFrame f = new MyFrame();
@@ -346,7 +398,7 @@ public class MyFrame extends JFrame implements MouseListener{
 			if (ke.getKeyCode() == KeyEvent.VK_ENTER)
 			{
 				ang = (ang + 1) % 10; // circle until 10. 
-				System.out.println("***** "+ang+"******");
+				System.out.println("** "+ang+"***");
 			}
 		}
 
@@ -355,5 +407,21 @@ public class MyFrame extends JFrame implements MouseListener{
 		public void keyTyped(KeyEvent ke){}
 
 	}
+
+	public Map getMap() {
+		return map;
+	}
+	public void setMap(Map map) {
+		this.map = map;
+	}
+	public Game get_game() {
+		return _game;
+	}
+	public void set_game(Game _game) {
+		this._game = _game;
+	}
+
+
+
 
 }

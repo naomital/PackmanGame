@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" path="src"/>
-	<classpathentry kind="src" path="GUI"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/jdk-11.0.1">
 		<attributes>
 			<attribute name="module" value="true"/>
@@ -13,6 +12,11 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="lib" path="C:/Users/n&amp;e/eclipse-workspace/Ex4_OOP/Ex4_v0.2.jar">
+		<attributes>
+			<attribute name="module" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="C:/Users/n&amp;e/eclipse-workspace/Ex4_OOP/Graph_v0.1.jar">
 		<attributes>
 			<attribute name="module" value="true"/>
 		</attributes>
