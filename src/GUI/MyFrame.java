@@ -154,12 +154,12 @@ public class MyFrame extends JFrame implements MouseListener{
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				play = new Play(_game);
-
 				play.setIDs(207642638, 313245268);
 				play.start(); // Default time is 100,000 milliseconds, default speed of player is 20
 				Thread thread =new Thread() {
 					public void run() {
 						while(play.isRuning()) {
+							updateAlgo();
 							azimut = algoPlayer.theNextStep();
 							play.rotate(azimut);
 							info = play.getStatistics();
@@ -194,6 +194,10 @@ public class MyFrame extends JFrame implements MouseListener{
 		this.addMouseListener(this);
 
 	}
+	
+	private void updateAlgo() {
+		algoPlayer= new AlgoPlayer(this);
+	}
 
 	private void openFile() {
 		int returnValue = openFileChosser.showOpenDialog(this);
@@ -203,8 +207,8 @@ public class MyFrame extends JFrame implements MouseListener{
 
 			}catch(Exception e) {}		
 		}
-		algoPlayer= new AlgoPlayer(this);
 	}
+
 	public synchronized void paint(Graphics g)
 	{
 		Image img = createImage(5000,5000);
@@ -320,8 +324,9 @@ public class MyFrame extends JFrame implements MouseListener{
 				}
 			}
 		}
-
 		g.drawImage(img,0,0,this);
+		if(play!=null)
+			algoPlayer= new AlgoPlayer(this);
 	}
 
 	@Override
@@ -335,9 +340,11 @@ public class MyFrame extends JFrame implements MouseListener{
 		Point3D p1 =  conv.PicselToGps(p, this.getWidth(), this.getHeight());
 		LatLonAlt latlonalt= new LatLonAlt(p1.x(),p1.y(),p1.z());
 		if(option==1 && _game != null) {
+			
 			System.out.println("I am in");
 			this.player = new Packman(latlonalt, 100.0D);
 			_game.setPlayer(player);
+			algoPlayer = new AlgoPlayer(this);
 			option=0;
 
 		}
