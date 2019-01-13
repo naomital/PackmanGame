@@ -1,5 +1,6 @@
 package Algo;
 
+import java.awt.Color;
 import java.awt.Rectangle;
 import java.awt.geom.Line2D;
 import java.awt.geom.Point2D;
@@ -12,22 +13,26 @@ import Coords1.Map;
 import Coords1.MyCoords;
 import GUI.MyFrame;
 import Geom.Point3D;
-import Robot.Fruit;
-import Robot.Game;
-import Robot.Packman;
+import game_element.Enemy;
+import game_element.Fruit;
+import game_element.Game;
+import game_element.Ghost;
+import game_element.Packman;
+import game_element.Player;
 import graph.Graph;
 import graph.Graph_Algo;
 import graph.Node;
 /** the class AlgoPlayer - gives the next azimut that the player has to walk considering boxes and gost.
  * @author Naomi and Adi */
 public class AlgoPlayer {
+	
 	private ArrayList<Point3D> boxBorder;
 	private ArrayList<Rectangle> pixelRecs;
-	private ArrayList<Line2D> starightLines;
 	private Game game;
 	private MyFrame frame;
 	private ConvertFactory cf;
-
+	private char nextType = 'X';
+	private int indexTraget = -1;
 
 	/**
 	 * the algo to the next azimuth.
@@ -40,31 +45,66 @@ public class AlgoPlayer {
 		this.boxBorder = new ArrayList<Point3D>();
 		this.cf = frame.getMap().getCf();
 		this.pixelRecs = new ArrayList<Rectangle>();
-		this.starightLines = new ArrayList<Line2D>();
-		//creatSetPointGraph();
 		if(pixelRecs.size() == 0) {
 			buildPixelRectangles();
 		}
-		//theNextStep();
 
 	}
-	public double theNextStep() {
-		double[] flag;
-		if(pixelRecs.size() == 0) {
-			buildPixelRectangles();
+	public ArrayList<Point3D> theNextStep() {
+		Point3D target = null;
+		ArrayList<Point3D> path=new ArrayList<Point3D> ();
+		int i = getClosestTarget(frame.get_game().getPlayer());
+		if(nextType == 'F') {
+			target = game.getTarget(i).getLocation();
 		}
-		int i= getClosestFruit(frame.get_game().getPlayer());
+		else if(nextType == 'P'){
+			target = game.getRobots().get(i).getLocation();
+		}
 		//create path
-		if(checkWall(frame.get_game().getPlayer().getLocation(),game.getTarget(i).getLocation())) {
-			String p = calculatPath(frame.get_game().getPlayer().getLocation(),game.getTarget(i).getLocation());
-			Fruit newTarget = game.getTarget(Integer.parseInt(p));
-			flag = new MyCoords().azimuth_elevation_dist( game.getPlayer().getLocation(), newTarget.getLocation());
-			return flag[0]; // only the azimuth.
+		if(checkWall(frame.get_game().getPlayer().getLocation(),target)) {
+			path= calculatPath(frame.get_game().getPlayer().getLocation(),target);
+			return path;
 		}
 		else {
-			flag = new MyCoords().azimuth_elevation_dist(game.getPlayer().getLocation(),game.getTarget(i).getLocation());
-			return flag[0];
+			path.add(target);
+			return path;
 		}
+	}
+	
+	public int getClosestTarget(Packman p) {
+		double dFruit=Integer.MAX_VALUE,dPackman=Integer.MAX_VALUE;
+		int fruitIndex = getClosestFruit(p);
+		int packmanIndex = getClosestPackman(p);
+		if(game.sizeT()!=0) { dFruit = p.distance3D(game.getTargets().get(fruitIndex));}
+		if(game.sizeR()!=0) { dPackman = p.distance3D(game.getRobots().get(packmanIndex));}
+		
+		if(dPackman > dFruit) {
+			if(this.checkWall(game.getTarget(fruitIndex).getLocation(), game.getTarget(fruitIndex).getLocation())) {
+				nextType = 'P';
+				indexTraget = packmanIndex;
+				return packmanIndex;
+			}
+			nextType = 'F';
+			indexTraget = fruitIndex;
+			return fruitIndex;
+		}
+		else {
+			if(this.checkWall(game.getPackman(packmanIndex).getLocation(), game.getPackman(packmanIndex).getLocation())) {
+				nextType = 'F';
+				indexTraget = fruitIndex;
+				return fruitIndex;
+			}
+			nextType = 'P';
+			indexTraget = packmanIndex;
+			return packmanIndex;
+		}
+	}
+
+	public int getIndexTraget() {
+		return indexTraget;
+	}
+	public void setIndexTraget(int indexTraget) {
+		this.indexTraget = indexTraget;
 	}
 	/**
 	 * getClosestFruit - passes on the array of he fruits and return the closest fruit to the player.
@@ -72,7 +112,7 @@ public class AlgoPlayer {
 	 * @param game - the game
 	 * @return - the index of the closes fruit.
 	 */
-	private int getClosestFruit(Packman p) {
+	public int getClosestFruit(Packman p) {
 		int ans = -1;
 		ArrayList<Fruit> ff = game.getTargets();
 		if (ff.size() > 0) {
@@ -89,88 +129,151 @@ public class AlgoPlayer {
 		}
 		return ans;
 	}
+	
 	/**
-	 * nextStepGost- check if is gost on the way.
-	 * @return boolean- if not-false if is a gost in the way- true.
+	 * This function gets the player location and returns the nearest packman.
+	 * @param p
+	 * @return
 	 */
-	private boolean nextStepGost() {
-		return true;
+	public int getClosestPackman(Packman p) {
+		int ans = -1;
+		ArrayList<Enemy> pp = game.getRobots();
+		if (pp.size() > 0) {
+			ans = 0;
+			double min_d = p.distance3D((Packman)pp.get(ans));
+			for (int i = 1; i < pp.size(); i++) {
+				double d = p.distance3D((Packman)pp.get(i));
+				if (d < min_d) {
+					min_d = d;
+					ans = i;
+
+				}
+			}
+		}
+		return ans;
 	}
+
 	/**calculatPath- if in the path from the player to the fruit we have  a box this function will 
 	 * Calculate a way to go to the fruit without going through the boxes.
 	 * @param player - the point of the player
 	 * @param fruit - the point of the fruit
 	 * @return - the next point to go for reach the fruit.
 	 */
-	private String calculatPath(Point3D player,Point3D fruit){
-		Graph G = new Graph();
+	public ArrayList<Point3D>  calculatPath(Point3D player,Point3D target){
+		System.out.println("start calc");
+		ArrayList<Point3D> path=new ArrayList<Point3D> (); // from current place to next target
+		boolean inRec = false;
+		Graph G = new Graph(); 
 		creatSetPointGraph(); // create array of points
 		//create graph:
 		String source = "a";
-		String target = "b";
+		String dest = "b";
 		G.add(new Node(source));
-		for(int i=1; i<boxBorder.size()-1; i++) {
+		for(int i=0; i<boxBorder.size(); i++) {
 			Node d = new Node(""+i);
 			G.add(d);
 		}
-		G.add(new Node(target));
+		G.add(new Node(dest));
 
-		createStraightLines();
-		int index1 = 0, index2 = 1; 
-		Node first = G.getNodeByIndex(index1); // source
-		Node second = G.getNodeByIndex(index2); // first node on list 
-		Point2D _p1 = starightLines.get(0).getP1();//fist node
-		Point2D _p2 = starightLines.get(1).getP2();//second node
-		for(Line2D line: starightLines) {
-			if(!line.getP1().equals(_p1))
-				first = G.getNodeByIndex(++index1);
-			if(!line.getP1().equals(_p2))
-				second = G.getNodeByIndex(++index2);
+		//player to boxBorder that see each other
+		for(int i=0;i<boxBorder.size();i++) {
+			Point3D p1 = cf.GpsToPicsel(player, frame.getWidth(), frame.getHeight());
+			Point3D p2= cf.GpsToPicsel(boxBorder.get(i), frame.getWidth(), frame.getHeight());
+			Line2D line = new Line2D.Double(p1.x(), p1.y(),p2.x(), p2.y());
 			for(Rectangle rec: pixelRecs) {
-				if(!line.intersects(rec)) {
-					G.addEdge(first.get_name(),second.get_name(),line.getP1().distance(line.getP2())); // need to change a and 1 to the right ones. 
+				if(line.intersects(rec)) {				
+					inRec = true;
+					break;
 				}
 			}
+			if(!inRec) {	
+				System.out.println("player:"+player+"boxBorder:"+boxBorder.get(i).toString());
+				G.addEdge("a",""+i,player.distance3D(boxBorder.get(i))); 
+			}
+			inRec = false;
 		}
-		Graph_Algo.dijkstra(G, source);
+		
+		//	boxBorder to boxBorder 	 that see each other
+		for(int i=0;i<boxBorder.size(); i++) {
+			for(int j=i+1;j<boxBorder.size(); j++) {
+				Point3D p1 = cf.GpsToPicsel(boxBorder.get(i), frame.getWidth(), frame.getHeight());
+				Point3D p2= cf.GpsToPicsel(boxBorder.get(j), frame.getWidth(), frame.getHeight());
+				Line2D line = new Line2D.Double(p1.x(), p1.y(),p2.x(), p2.y());
+				for(Rectangle rec: pixelRecs) {
+					if(line.intersects(rec)) {				
+						inRec = true;
+						break;
+					}
+				}
+				if(!inRec) {		
+					System.out.println("boxborder1:"+boxBorder.get(i).toString()+"boxborder2:"+boxBorder.get(j).toString());
+					G.addEdge(""+i,""+j,boxBorder.get(i).distance3D(boxBorder.get(j))); 
+				}
+				inRec = false;
+			}
+		}
+		
+		//target to boxBorder that see each other
+		for(int i=0;i<boxBorder.size();i++) {
+			for(Rectangle rec: pixelRecs) {
+				Point3D p1 = cf.GpsToPicsel(target, frame.getWidth(), frame.getHeight());
+				Point3D p2= cf.GpsToPicsel(boxBorder.get(i), frame.getWidth(), frame.getHeight());
+				Line2D line = new Line2D.Double(p1.x(), p1.y(),p2.x(), p2.y());
+				if(line.intersects(rec)) {	
+					inRec = true;
+					break;
+				}
+			}
+			if(!inRec) {
+				System.out.println("target:"+target.toString()+"boxBorder:"+boxBorder.get(i).toString());
+				G.addEdge(""+i,"b",target.distance3D(boxBorder.get(i))); 
+			}
+			inRec = false;
+		}
 
-		Node b = G.getNodeByName(target); 
+		Graph_Algo graph_algo =new Graph_Algo();
+		
+		try
+		{
+		graph_algo.dijkstra(G, source);
+		}
+		catch (Exception e)
+		{
+			System.out.println();
+		}
 
-		System.out.println("***** Graph Demo for OOP_Ex4 *****");
+		Node b = G.getNodeByName(dest); 
+
+		System.out.println("* Graph Demo for OOP_Ex4 *");
 		System.out.println(b);
 		System.out.println("Dist: "+b.getDist());
 		ArrayList<String> shortestPath = b.getPath();
-		for(int i=0;i<shortestPath.size();i++) {
-			System.out.print(","+shortestPath.get(i));
+
+		for(int i=1;i<shortestPath.size();i++) {
+			Point3D p1= new Point3D(boxBorder.get(Integer.parseInt(shortestPath.get(i))));
+			path.add(p1);
 		}
-		//System.out.println(G.toString());
-		return shortestPath.get(0);
+		path.add(target);
+		return path;
 
 	}
-
+	/**checkWall - check if the path passes into a box.
+	 * @param gps0 - the player point.
+	 * @param gps1 - the target point.
+	 * @return - boolean if it passes or not.
+	 */
 	public boolean checkWall(Point3D p1, Point3D p2) {
-		boolean isWall = false;
 		p1 = new Point3D(cf.GpsToPicsel(p1, frame.getWidth(), frame.getHeight()));
 		p2 = new Point3D(cf.GpsToPicsel(p2, frame.getWidth(), frame.getHeight()));
 		Line2D newLine = new Line2D.Double(p1.x(), p1.y(),p2.x(), p2.y());
 		for(Rectangle rec: pixelRecs) {
 			if(newLine.intersects(rec)) {
-				isWall = true;
+				System.out.println("Check Wall: True");
+				return true;
 			}
 		}
-		System.out.println("Check Wall: "+isWall);
-		return isWall;
-	}
-
-	private void createStraightLines() {
-		int runner = 1;
-		for(Point3D p: boxBorder) {
-			for(int i=runner; runner<boxBorder.size(); runner++) {
-				Line2D newLine = new Line2D.Double(p.x(), p.y(),boxBorder.get(i).x(), boxBorder.get(i).y());
-				starightLines.add(newLine);
-			}
-			runner++;
-		}
+		System.out.println("Check Wall: False");
+		return false;
 	}
 
 	/**
@@ -182,37 +285,37 @@ public class AlgoPlayer {
 	 */
 	private void creatSetPointGraph() {
 		for(int i=0; i<game.sizeB();i++) {
+			System.out.println("Rec number "+i+": ");
 			//A:
-			Point3D upperLeft = cf.GpsToPicsel((new Point3D(game.getBox(i).getMin().lat(),game.getBox(i).getMax().lon(),0)), frame.getWidth(), frame.getHeight());
-			if(!(ifPointIsInRectangle(upperLeft))) {
+			Point3D upperLeft = cf.GpsToPicsel((new Point3D(game.getBox(i).getMax().lat(),game.getBox(i).getMin().lon(),0)),frame.getWidth(), frame.getHeight());
+			if(!(ifPointIsInRectangle(upperLeft))&&isIn(upperLeft)) {
 				upperLeft.add(-1,-1);
-				if(isIn(upperLeft)) {
-					//whatISee(upperLeft, i);
 					boxBorder.add(cf.PicselToGps(upperLeft, frame.getWidth(), frame.getHeight()));
-				}
+				
 			}
 			//B:
 			Point3D upperRight = cf.GpsToPicsel(new Point3D(game.getBox(i).getMax()), frame.getWidth(), frame.getHeight());
-			if(!(ifPointIsInRectangle(upperRight))) {
+			if(!(ifPointIsInRectangle(upperRight)&&isIn(upperRight))) {
 				upperRight.add(1,-1);
-				if(isIn(upperRight))
+			//	if(isIn(upperRight))
 					boxBorder.add(cf.PicselToGps(upperRight, frame.getWidth(), frame.getHeight()));
 			}
 			//C:
-			Point3D lowerRight =cf.GpsToPicsel((new Point3D(game.getBox(i).getMax().lat(),game.getBox(i).getMin().lon(),0)),frame.getWidth(), frame.getHeight());
-			if(!(ifPointIsInRectangle(lowerRight))) {
+			Point3D lowerRight =cf.GpsToPicsel((new Point3D(game.getBox(i).getMin().lat(),game.getBox(i).getMax().lon(),0)), frame.getWidth(), frame.getHeight());
+			if(!(ifPointIsInRectangle(lowerRight))&&isIn(lowerRight)) {
 				lowerRight.add(1,1);
-				if(isIn(lowerRight))
+				//if(isIn(lowerRight))
 					boxBorder.add(cf.PicselToGps(lowerRight, frame.getWidth(), frame.getHeight()));
 			}
 			//D:
 			Point3D lowerLeft = cf.GpsToPicsel(new Point3D(game.getBox(i).getMin()), frame.getWidth(), frame.getHeight());
-			if(!(ifPointIsInRectangle(lowerLeft))) {
+			if(!(ifPointIsInRectangle(lowerLeft))&&isIn(lowerLeft)) {
 				lowerLeft.add(-1, 1);
-				if(isIn(lowerLeft))
+				//if(isIn(lowerLeft))
 					boxBorder.add(cf.PicselToGps(lowerLeft, frame.getWidth(), frame.getHeight()));
-			}
+			//}
 		}		
+	}
 	}
 
 	/**ifPointIsInRectangle - check if point is in rectangle. */
@@ -221,17 +324,16 @@ public class AlgoPlayer {
 	 * @param p - the given point in GPS coordinate.
 	 * @return TRUE - if the point is inside another box or FALSE otherwise.
 	 */
-	private boolean ifPointIsInRectangle(Point3D p) {
-		boolean answer=false;
+	public boolean ifPointIsInRectangle(Point3D p) {
 		Point3D pointPixel = cf.GpsToPicsel(p, frame.getWidth(), frame.getHeight());
 		for(Rectangle rec: pixelRecs) {
 			//			Rectangle rec = createPixelRec(i);
 			//	System.out.println(rec.toString()+"\n");
 			if(rec.contains((int)pointPixel.x(), (int)pointPixel.y())) {
-				answer=true;
+				return true;
 			}
 		}
-		return answer;
+		return false;
 	}
 
 	/**
@@ -253,6 +355,7 @@ public class AlgoPlayer {
 			return false;
 		if((pixelPoint.y() < 1)||(pixelPoint.y() > 641))
 			return false;
+		
 		return true;
 	}
 
@@ -261,46 +364,70 @@ public class AlgoPlayer {
 	 * @param index - the index of the box in the array of boxes.
 	 * @return rec - Rectangle that represent the box in Pixels.
 	 */
-	private Rectangle createPixelRec(int index) {
-		Point3D upperLeft,lowerRight,lowerRightP,upperLeftP, upperRightP, lowerLeftP;
-		upperLeft = new Point3D(game.getBox(index).getMin().lat(), game.getBox(index).getMax().lon(), 0); //A
-		lowerRight = new Point3D(game.getBox(index).getMax().lat(), game.getBox(index).getMin().lon(),0); //C
-
-		upperLeftP = cf.GpsToPicsel(upperLeft, frame.getWidth(), frame.getHeight()); //A
-		lowerRightP = cf.GpsToPicsel(lowerRight, frame.getWidth(), frame.getHeight());//C
-		upperRightP = cf.GpsToPicsel(game.getBox(index).getMax(), frame.getWidth(), frame.getHeight());//B
-		lowerLeftP = cf.GpsToPicsel(game.getBox(index).getMin(), frame.getWidth(), frame.getHeight());//D
-
-		Rectangle rec = new Rectangle((int)upperLeftP.x(), (int)upperLeftP.y(), (int)lowerRightP.x() - (int)lowerLeftP.x(),(int)upperLeftP.y() - (int)lowerLeftP.y());
+	public Rectangle createPixelRec(int index) {
+		double upperY, lowerY, leftX, rightX;
+		//	if(game.getBox(index).getMax().y() > game.getBox(index).getMin().y()) {
+		lowerY =  game.getBox(index).getMin().y();
+		upperY =  game.getBox(index).getMax().y();
+	
+		rightX = game.getBox(index).getMin().x();
+		leftX = game.getBox(index).getMax().x();
+		
+		Point3D C = cf.GpsToPicsel(new Point3D(rightX, upperY),frame.getWidth(), frame.getHeight()) ;
+		Point3D A = cf.GpsToPicsel(new Point3D(leftX, lowerY), frame.getWidth(), frame.getHeight());
+		
+		Rectangle rec = new Rectangle((int)A.x(), (int)A.y(), Math.abs((int)C.x() - (int)A.x()), Math.abs((int)A.y() - (int)C.y()));
 		return rec;
 	}
 
 
 
-	/**isWall - check if the path passes into a box.
-	 * @param gps0 - the player point.
-	 * @param gps1 - the fruit point.
-	 * @return - boolean if it passes or not.
-	 */
-	//	private boolean isWall(Point3D gps0,Point3D gps1) {
-	//		return false;
-	//
-	//	}
 
-//	public static void main(String[] args) {
-//		MyFrame frame = new MyFrame();
-//		AlgoPlayer ap = new AlgoPlayer(frame);
-//		Point3D p1 = new Point3D(526.0, 127.0, 0);
-//		Point3D p2 = new Point3D(151.0, 354.0, 0.0);
-//		Rectangle rec = new Rectangle(263, 186,317,217);
-//		ap.getPixelRecs().add(rec);
-//		System.out.println(ap.checkWall(p1, p2));
-//		
-//	}
+	
+	
+		public static void main(String[] args) {
+			MyFrame frame = new MyFrame();
+			frame.setGame("data\\Ex4_OOP_example8.csv");
+
+			AlgoPlayer ap = new AlgoPlayer(frame);
+			Point3D p1 = new Point3D(526.0, 127.0, 0);
+			Point3D P1= new Point3D(ap.cf.PicselToGps(p1, frame.getWidth(), frame.getHeight()));
+			Point3D p2 = new Point3D(151.0, 354.0, 0.0);
+			Point3D P2= new Point3D(ap.cf.PicselToGps(p2, frame.getWidth(), frame.getHeight()));
+	
+			Rectangle rec = new Rectangle(263, 186,317,217);
+			ap.getPixelRecs().add(rec);
+			System.out.println(ap.checkWall(P1, P2));
+			Point3D p0 = new Point3D(478,335, 0);
+			p1=	ap.getCf().PicselToGps(p0, frame.getWidth(), frame.getHeight());
+			LatLonAlt l1= new LatLonAlt(p1.x(),p1.y(),0);
+			Player p= new Player(l1,10);
+			 int i  =ap.getClosestTarget(p);
+			 LatLonAlt l2=  frame.get_game().getTarget(i).getLocation();
+			 System.out.println( frame.get_game().getTarget(i).getLocation());
+			 ap.createPixelRec(1);
+			System.out.println(ap.getPixelRecs().get(0).getWidth());	
+				System.out.println(ap.getPixelRecs().get(0).getHeight());
+				System.out.println(ap.getPixelRecs().get(0).toString());
+			System.out.println(ap.ifPointIsInRectangle(new Point3D(ap.cf.PicselToGps(new Point3D(20,30,0), frame.getWidth(), frame.getHeight()))));
+	
+		}
+	public ConvertFactory getCf() {
+		return cf;
+	}
+	public void setCf(ConvertFactory cf) {
+		this.cf = cf;
+	}
 	public ArrayList<Rectangle> getPixelRecs() {
 		return pixelRecs;
 	}
 	public void setPixelRecs(ArrayList<Rectangle> pixelRecs) {
 		this.pixelRecs = pixelRecs;
+	}
+	public char getNextType() {
+		return nextType;
+	}
+	public void setNextType(char nextType) {
+		this.nextType = nextType;
 	}
 }
