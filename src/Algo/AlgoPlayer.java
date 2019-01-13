@@ -25,7 +25,7 @@ import graph.Node;
 /** the class AlgoPlayer - gives the next azimut that the player has to walk considering boxes and gost.
  * @author Naomi and Adi */
 public class AlgoPlayer {
-	
+
 	private ArrayList<Point3D> boxBorder;
 	private ArrayList<Rectangle> pixelRecs;
 	private Game game;
@@ -50,6 +50,15 @@ public class AlgoPlayer {
 		}
 
 	}
+	/**
+	 * This function calculate the next path which the player would go.
+	 * At first, the function will check if the target is Fruit or Packman. 
+	 * After that, There are 2 options: 
+	 * [-1-] the packman will go stright to the target: 
+	 * [-2-] the packman need to ass through obstacles in order to reach the goal. 
+	 * @return The current packman's path.
+
+	 */
 	public ArrayList<Point3D> theNextStep() {
 		Point3D target = null;
 		ArrayList<Point3D> path=new ArrayList<Point3D> ();
@@ -70,14 +79,20 @@ public class AlgoPlayer {
 			return path;
 		}
 	}
-	
+
+	/**
+	 * This function calculate the closest fruit and the closest packman from the current place of the player, 
+	 * and choose the closest of them both.
+	 * @param p - The player.
+	 * @return the closest Traget(Fruit or Packman).
+	 */
 	public int getClosestTarget(Packman p) {
 		double dFruit=Integer.MAX_VALUE,dPackman=Integer.MAX_VALUE;
 		int fruitIndex = getClosestFruit(p);
 		int packmanIndex = getClosestPackman(p);
 		if(game.sizeT()!=0) { dFruit = p.distance3D(game.getTargets().get(fruitIndex));}
 		if(game.sizeR()!=0) { dPackman = p.distance3D(game.getRobots().get(packmanIndex));}
-		
+
 		if(dPackman > dFruit) {
 			if(this.checkWall(game.getTarget(fruitIndex).getLocation(), game.getTarget(fruitIndex).getLocation())) {
 				nextType = 'P';
@@ -106,6 +121,7 @@ public class AlgoPlayer {
 	public void setIndexTraget(int indexTraget) {
 		this.indexTraget = indexTraget;
 	}
+
 	/**
 	 * getClosestFruit - passes on the array of he fruits and return the closest fruit to the player.
 	 * @param p - player
@@ -129,7 +145,7 @@ public class AlgoPlayer {
 		}
 		return ans;
 	}
-	
+
 	/**
 	 * This function gets the player location and returns the nearest packman.
 	 * @param p
@@ -192,7 +208,7 @@ public class AlgoPlayer {
 			}
 			inRec = false;
 		}
-		
+
 		//	boxBorder to boxBorder 	 that see each other
 		for(int i=0;i<boxBorder.size(); i++) {
 			for(int j=i+1;j<boxBorder.size(); j++) {
@@ -212,7 +228,7 @@ public class AlgoPlayer {
 				inRec = false;
 			}
 		}
-		
+
 		//target to boxBorder that see each other
 		for(int i=0;i<boxBorder.size();i++) {
 			for(Rectangle rec: pixelRecs) {
@@ -232,10 +248,10 @@ public class AlgoPlayer {
 		}
 
 		Graph_Algo graph_algo =new Graph_Algo();
-		
+
 		try
 		{
-		graph_algo.dijkstra(G, source);
+			graph_algo.dijkstra(G, source);
 		}
 		catch (Exception e)
 		{
@@ -257,6 +273,7 @@ public class AlgoPlayer {
 		return path;
 
 	}
+
 	/**checkWall - check if the path passes into a box.
 	 * @param gps0 - the player point.
 	 * @param gps1 - the target point.
@@ -276,8 +293,9 @@ public class AlgoPlayer {
 		return false;
 	}
 
+
 	/**
-	 * This function build the graph that needed for the algorythm. 
+	 * This function build the graph that needed for the algorithm. 
 	 * for every box in the game the function checks all it's edges and adds to arrayList the points that
 	 * are not inside another box and that are between the game's frame border. 
 	 * In addition, this function increase every "fit" point with 1 pixel. (to allowed the player to walk in safe
@@ -290,32 +308,27 @@ public class AlgoPlayer {
 			Point3D upperLeft = cf.GpsToPicsel((new Point3D(game.getBox(i).getMax().lat(),game.getBox(i).getMin().lon(),0)),frame.getWidth(), frame.getHeight());
 			if(!(ifPointIsInRectangle(upperLeft))&&isIn(upperLeft)) {
 				upperLeft.add(-1,-1);
-					boxBorder.add(cf.PicselToGps(upperLeft, frame.getWidth(), frame.getHeight()));
-				
+				boxBorder.add(cf.PicselToGps(upperLeft, frame.getWidth(), frame.getHeight()));
 			}
 			//B:
 			Point3D upperRight = cf.GpsToPicsel(new Point3D(game.getBox(i).getMax()), frame.getWidth(), frame.getHeight());
 			if(!(ifPointIsInRectangle(upperRight)&&isIn(upperRight))) {
 				upperRight.add(1,-1);
-			//	if(isIn(upperRight))
-					boxBorder.add(cf.PicselToGps(upperRight, frame.getWidth(), frame.getHeight()));
+				boxBorder.add(cf.PicselToGps(upperRight, frame.getWidth(), frame.getHeight()));
 			}
 			//C:
 			Point3D lowerRight =cf.GpsToPicsel((new Point3D(game.getBox(i).getMin().lat(),game.getBox(i).getMax().lon(),0)), frame.getWidth(), frame.getHeight());
 			if(!(ifPointIsInRectangle(lowerRight))&&isIn(lowerRight)) {
 				lowerRight.add(1,1);
-				//if(isIn(lowerRight))
-					boxBorder.add(cf.PicselToGps(lowerRight, frame.getWidth(), frame.getHeight()));
+				boxBorder.add(cf.PicselToGps(lowerRight, frame.getWidth(), frame.getHeight()));
 			}
 			//D:
 			Point3D lowerLeft = cf.GpsToPicsel(new Point3D(game.getBox(i).getMin()), frame.getWidth(), frame.getHeight());
 			if(!(ifPointIsInRectangle(lowerLeft))&&isIn(lowerLeft)) {
 				lowerLeft.add(-1, 1);
-				//if(isIn(lowerLeft))
-					boxBorder.add(cf.PicselToGps(lowerLeft, frame.getWidth(), frame.getHeight()));
-			//}
-		}		
-	}
+				boxBorder.add(cf.PicselToGps(lowerLeft, frame.getWidth(), frame.getHeight()));
+			}		
+		}
 	}
 
 	/**ifPointIsInRectangle - check if point is in rectangle. */
@@ -327,14 +340,13 @@ public class AlgoPlayer {
 	public boolean ifPointIsInRectangle(Point3D p) {
 		Point3D pointPixel = cf.GpsToPicsel(p, frame.getWidth(), frame.getHeight());
 		for(Rectangle rec: pixelRecs) {
-			//			Rectangle rec = createPixelRec(i);
-			//	System.out.println(rec.toString()+"\n");
 			if(rec.contains((int)pointPixel.x(), (int)pointPixel.y())) {
 				return true;
 			}
 		}
 		return false;
 	}
+
 
 	/**
 	 * Builds arrayList of boxes in pixels.
@@ -355,7 +367,7 @@ public class AlgoPlayer {
 			return false;
 		if((pixelPoint.y() < 1)||(pixelPoint.y() > 641))
 			return false;
-		
+
 		return true;
 	}
 
@@ -369,52 +381,21 @@ public class AlgoPlayer {
 		//	if(game.getBox(index).getMax().y() > game.getBox(index).getMin().y()) {
 		lowerY =  game.getBox(index).getMin().y();
 		upperY =  game.getBox(index).getMax().y();
-	
+
 		rightX = game.getBox(index).getMin().x();
 		leftX = game.getBox(index).getMax().x();
-		
+
 		Point3D C = cf.GpsToPicsel(new Point3D(rightX, upperY),frame.getWidth(), frame.getHeight()) ;
 		Point3D A = cf.GpsToPicsel(new Point3D(leftX, lowerY), frame.getWidth(), frame.getHeight());
-		
+
 		Rectangle rec = new Rectangle((int)A.x(), (int)A.y(), Math.abs((int)C.x() - (int)A.x()), Math.abs((int)A.y() - (int)C.y()));
 		return rec;
 	}
 
-
-
-
-	
-	
-		public static void main(String[] args) {
-			MyFrame frame = new MyFrame();
-			frame.setGame("data\\Ex4_OOP_example8.csv");
-
-			AlgoPlayer ap = new AlgoPlayer(frame);
-			Point3D p1 = new Point3D(526.0, 127.0, 0);
-			Point3D P1= new Point3D(ap.cf.PicselToGps(p1, frame.getWidth(), frame.getHeight()));
-			Point3D p2 = new Point3D(151.0, 354.0, 0.0);
-			Point3D P2= new Point3D(ap.cf.PicselToGps(p2, frame.getWidth(), frame.getHeight()));
-	
-			Rectangle rec = new Rectangle(263, 186,317,217);
-			ap.getPixelRecs().add(rec);
-			System.out.println(ap.checkWall(P1, P2));
-			Point3D p0 = new Point3D(478,335, 0);
-			p1=	ap.getCf().PicselToGps(p0, frame.getWidth(), frame.getHeight());
-			LatLonAlt l1= new LatLonAlt(p1.x(),p1.y(),0);
-			Player p= new Player(l1,10);
-			 int i  =ap.getClosestTarget(p);
-			 LatLonAlt l2=  frame.get_game().getTarget(i).getLocation();
-			 System.out.println( frame.get_game().getTarget(i).getLocation());
-			 ap.createPixelRec(1);
-			System.out.println(ap.getPixelRecs().get(0).getWidth());	
-				System.out.println(ap.getPixelRecs().get(0).getHeight());
-				System.out.println(ap.getPixelRecs().get(0).toString());
-			System.out.println(ap.ifPointIsInRectangle(new Point3D(ap.cf.PicselToGps(new Point3D(20,30,0), frame.getWidth(), frame.getHeight()))));
-	
-		}
 	public ConvertFactory getCf() {
 		return cf;
 	}
+
 	public void setCf(ConvertFactory cf) {
 		this.cf = cf;
 	}
@@ -430,4 +411,7 @@ public class AlgoPlayer {
 	public void setNextType(char nextType) {
 		this.nextType = nextType;
 	}
+
+
+
 }

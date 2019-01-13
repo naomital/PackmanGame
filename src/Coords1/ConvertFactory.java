@@ -1,15 +1,15 @@
 package Coords1;
 
 import java.awt.Image;
+
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-
 import javax.imageio.ImageIO;
-
 import Coords.Map;
-
 import Geom.Point3D;
+
+
 /**class ConvertFactor - Converts points from GPS to pixel and from pixel to gps,
  * and calculates distance between two pixel points (calculates distance on GPS).
  *Depends on the link-https://stackoverflow.com/questions/38748832/convert-longitude-and-latitude-coordinates-to-image-of-a-map-pixels-x-and-y-coor
@@ -78,6 +78,12 @@ public class ConvertFactory {
 		return myCoords.distance3d(gps0, gps1);			
 	}
 	
+	/**
+	 * This function calculate the distance between 2 GPS points.
+	 * @param gps0 - point 1.
+	 * @param gps1 - point2. 
+	 * @return the distance. 
+	 */
 	public static double distanceGPS(Point3D gps0,Point3D gps1) {
 		MyCoords myCoords= new MyCoords();
 		return myCoords.distance3d(gps0, gps1);		

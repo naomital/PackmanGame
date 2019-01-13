@@ -1,6 +1,5 @@
 package GUI;
 
-
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
@@ -42,6 +41,10 @@ import game_element.Ghost;
 import game_element.Packman;
 import game_element.Player;
 
+/**
+ * This class responsible for the graphic user interface.
+ * @author Adi and Naomi
+ */
 
 public class MyFrame extends JFrame implements MouseListener{
 
@@ -62,9 +65,13 @@ public class MyFrame extends JFrame implements MouseListener{
 	private AlgoPlayer algoPlayer;
 	private int numOfGame;
 	private String points;
+	private Image gameOver;
+	
+	/**
+	 * constructor for MyFrame.
+	 */
 	public  MyFrame(){
 		super("Game");
-
 		this.setLayout(new FlowLayout());
 		this.setBounds(0, 0, 1433, 642);
 		Dimension screenSize = new Dimension();
@@ -76,19 +83,26 @@ public class MyFrame extends JFrame implements MouseListener{
 		System.out.println("CENTER2: "+latlonalt.toString());
 		conv= new ConvertFactory();
 		map = new Map();
+		
+		//set icons for the game: 
 		this.image = map.getImg();
+		this.gameOver=Toolkit.getDefaultToolkit().getImage("icons\\gameover.jpeg");
 		this.setLayout(new FlowLayout());
 		this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		openFileChosser= new JFileChooser();
 		openFileChosser.setCurrentDirectory(new File("C:\\Users\\eclipse-workspace\\Ex4_OOP"));
 		pack();
 	}
+	
+	/**
+	 * This function creates the menu.
+	 */
 	public void initGui() {
 		MenuBar menuBar = new MenuBar();
 		Menu menu = new Menu("Menu");
 		menuBar.add(menu); 
 
-		//***open-game #1: 
+		//open-game #1: This button opens a new CSV game file and repaint it to the game board.  
 		openFile = new MenuItem("open Game");
 		menu.add(openFile); // the menu adds this item
 		openFile.addActionListener(new ActionListener() {
@@ -98,7 +112,8 @@ public class MyFrame extends JFrame implements MouseListener{
 				repaint();
 			}
 		});
-		//***add player #2: 
+		
+		//add player #2: This button selects a position for our player.
 		menuPlayer = new MenuItem("add Player");
 		menu.add(menuPlayer); // the menu adds this item
 		menuPlayer.addActionListener(new ActionListener() {
@@ -109,14 +124,13 @@ public class MyFrame extends JFrame implements MouseListener{
 
 		});
 
-		//***start game #3: 
+		//start game #3: This button opens a game that moves the player by mouse clickes.
 		startGame = new MenuItem("Start!");
 		menu.add(startGame); // the menu adds this item
 		this.addKeyListener(new keyListener()); // start listening for ENTER key
 		startGame.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				//play = new Play(_game.configoratzia);
 				play.setIDs(207642638, 313245268);
 				numOfGame=play.getHash1();
 				System.out.println("game name:"+numOfGame);
@@ -126,16 +140,13 @@ public class MyFrame extends JFrame implements MouseListener{
 						while(play.isRuning()) {
 							play.rotate(azimut);
 							_game.addStringGame(play.getBoard()); //update _game objs
-							//		play.
 							try {
 								Thread.sleep(50);
-								//	_game.    (play.getBoard());
 								repaint();
 							}catch(Exception e){
 
 							}
 						}
-						//play.stop();
 						System.out.println("* Done Game (user stop) *");
 						info = play.getStatistics() ;
 						System.out.println(info);
@@ -145,21 +156,21 @@ public class MyFrame extends JFrame implements MouseListener{
 				
 			}
 		});
-		//***start game #3: 
+		
+		//start game #3: This button activates a game that uses the algorithm we have built for the player
+
 		startAlgo = new MenuItem("Start player's algorithm!");
 		menu.add(startAlgo); // the menu adds this item
 		this.addKeyListener(new keyListener()); // start listening for ENTER key
 		startAlgo.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				//play = new Play(_game.getStringGame());
-
+				
+				
 				ArrayList<Point3D> path=new ArrayList<Point3D> ();
 				path.addAll( algoPlayer.theNextStep());
 				play.setIDs(207642638, 313245268);
 				numOfGame=play.getHash1();
-				System.out.println("game name:"+numOfGame);
-
 				play.start(); // Default time is 100,000 milliseconds, default speed of player is 20
 				Thread thread =new Thread() {
 					public void run() {
@@ -169,9 +180,7 @@ public class MyFrame extends JFrame implements MouseListener{
 							}
 							if(path.size()==0) {
 								path.addAll( algoPlayer.theNextStep());
-								System.out.println("path player:"+path.toString());
 							}
-
 							azimut=theNextAzimut(path);
 							play.rotate(azimut);
 							_game.addStringGame(play.getBoard());
@@ -186,19 +195,20 @@ public class MyFrame extends JFrame implements MouseListener{
 						}
 						 points=new Comparisons().Points(numOfGame);
 						 option =2;
-						///	System.out.println("* Done Game (user stop) *");
 					}
 				};
 				thread.start();
-			
-			
-
-			
 			}
 		});
 		setMenuBar(menuBar);  // "this" JFrame sets its menu-bar	
 		this.addMouseListener(this);
 	}
+
+	/**
+	 * This function checks if the player reach the first destination of the path. 
+	 * @param path - the current walk path for the player. 
+	 * @return True - if the player reached the first destination of the path. False - if not. 
+	 */
 	private boolean wasEaten(ArrayList<Point3D> path) {
 		boolean isEat = false; 
 		if(_game.getPlayer().getLocation().lat() > path.get(0).x()- (0.00001) &&_game.getPlayer().getLocation().lat() < path.get(0).x() + (0.00001)
@@ -207,32 +217,42 @@ public class MyFrame extends JFrame implements MouseListener{
 		}
 		return isEat;
 	}
+	
+	/**
+	 * This function calculate and return the next azimut to the player's target. 
+	 * @param path - the player's current walking path.
+	 * @return
+	 */
 	private double theNextAzimut(ArrayList<Point3D> path) {
 
 		double [] angle= new MyCoords().azimuth_elevation_dist( _game.getPlayer().getLocation(),path.get(0));
 		return (int) angle[0];
 	}
+	
+	/**
+	 * This function open file from CSV game and set new game base of it.
+	 */
 	private void openFile() {
 		int returnValue = openFileChosser.showOpenDialog(this);
 		if(returnValue==JFileChooser.APPROVE_OPTION) {
 			try {
 				_game =  new Game(openFileChosser.getSelectedFile().getPath());
+				
 				play = new Play(openFileChosser.getSelectedFile().getPath());
 
 			}catch(Exception e) {}		
 		}
 		algoPlayer= new AlgoPlayer(this);
 	}
+	
+	/**
+	 * This function paints the game on the map with all it's elements.
+	 */
 	public synchronized void paint(Graphics g)
 	{
 		Image img = createImage(5000,5000);
 		Graphics g1 = img.getGraphics();
-		
 		g1.drawImage(image, 0, 0,getWidth(),getHeight(), this);
-		g1.setFont(font);
-		g1.setColor(Color.white);
-		g1.drawString(info,60,620);
-
 		
 		if(_game!= null) {
 			if(_game.sizeB()>0) {
@@ -282,7 +302,7 @@ public class MyFrame extends JFrame implements MouseListener{
 					Point3D p1= conv.GpsToPicsel(p, this.getWidth(),this.getHeight());
 					//	System.out.println(p.toString());
 					g1.drawString("("+Integer.toString(x)+", "+Integer.toString(y)+")",x,y-10);
-					g1.drawImage(_game.getPlayer().getImage(),(int)p1.x(),(int)p1.y(), this);
+					g1.drawImage(_game.getPlayer().getImage(),(int)p1.x()-20,(int)p1.y()-20, this);
 				}
 			}
 			if(_game.getTargets().size()>0) {
@@ -322,24 +342,30 @@ public class MyFrame extends JFrame implements MouseListener{
 		if(option ==2) {
 			g1.setFont(font);
 			g1.setColor(Color.white);
+			g1.drawImage(this.gameOver, 10, 10, 1433, 642,this);
 			g1.drawString(points,270,180);
 			System.out.println(points);
-
 		}
+
+		g1.setFont(font);
+		g1.setColor(Color.white);
+		g1.drawString(info,60,620);
+
 		g.drawImage(img,0,0,this);
 	}
 
+	/**
+	 * This function responds to mouse clicks and set the player's location based to the clickes. 
+	 */
 	@Override
 	public void mouseClicked(MouseEvent event) {
 		System.out.println("mouse clicked!");
 		x = event.getX();
 		y = event.getY();
-		System.out.println("X: "+x+" , "+"Y: "+y);
 		Point3D p = new Point3D(x, y,0);
 		Point3D p1 =  conv.PicselToGps(p, this.getWidth(), this.getHeight());
 		LatLonAlt latlonalt= new LatLonAlt(p1.x(),p1.y(),p1.z());
 		if(option==1 && _game != null) {
-			System.out.println("I am in");
 			_game.setPlayer( new Player(latlonalt, 100.0D));
 			play.setInitLocation(_game.getPlayer().getLocation().lat(),_game.getPlayer().getLocation().lon());
 			option=0;
@@ -350,14 +376,15 @@ public class MyFrame extends JFrame implements MouseListener{
 	public void mouseEntered(MouseEvent event) {}
 	@Override
 	public void mouseExited(MouseEvent arg0) {}
-
 	@Override
 	public void mousePressed(MouseEvent event) {}
+	/**
+	 * This function calculate and update the current azimut as the mouse been pressed.
+	 */
 	@Override
 	public void mouseReleased(MouseEvent event) {
 		x = event.getX();
 		y = event.getY();
-		System.out.println("X: "+x+" , "+"Y: "+y);
 		Point3D p = new Point3D(x, y,0);
 		Point3D p1 =  conv.PicselToGps(p, this.getWidth(), this.getHeight());
 		double [] flag= new MyCoords().azimuth_elevation_dist( _game.getPlayer().getLocation(),p1);

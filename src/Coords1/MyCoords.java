@@ -70,7 +70,11 @@ public class MyCoords implements coords_converter  {
 		if(!(-450<p.z()&&p.z()>450))flg=false;
 		return flg;
 	}
-	//private function that converts a gps point to a point in meters.
+	/**
+	 * This function converts a gps point to a point in meters.
+	 * @param gps - point to convert.
+	 * @return point in meters.
+	 */
 	private  Point3D trans_gpsToMeter(Point3D gps) {
 		double x,y,z=gps.z();
 		x=Math.sin((gps.x()*Math.PI)/180)*EarthRadius;
@@ -78,8 +82,15 @@ public class MyCoords implements coords_converter  {
 		Point3D ans=new Point3D (x,y,z);
 		return ans;
 	}
-	//protected function that calculates the azimuth, is taken from the following link-https://stackoverflow.com/questions/9457988/bearing-from-one-coordinate-to-another/29471137
-	protected static double bearing(double lat1, double lon1, double lat2, double lon2){
+	/**
+	 * function calculates the azimuth, it's taken from the following link-https://stackoverflow.com/questions/9457988/bearing-from-one-coordinate-to-another/29471137
+	 * @param lat1 - latitude of point 1.
+	 * @param lon1 - lontitude of point 1.
+	 * @param lat2 - latitude of point 2.
+	 * @param lon2 - lontitude of point 2.
+	 * @return the azimut between both.
+	 */
+	private static double bearing(double lat1, double lon1, double lat2, double lon2){
 		  double longitude1 = lon1;
 		  double longitude2 = lon2;
 		  double latitude1 = Math.toRadians(lat1);
@@ -90,8 +101,4 @@ public class MyCoords implements coords_converter  {
 
 		  return (Math.toDegrees(Math.atan2(y, x))+360)%360;
 		}
-	
-	
-	
-
 }
