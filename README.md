@@ -14,4 +14,6 @@ Then, there are 2 ways to move your player:
 1. Choose "Start!" And move your player by clicking on the mouse.
 2. Select "start player's algorithm!" and let your player move on the screen on his own.
 
+<img width="956" alt="game1" src="https://user-images.githubusercontent.com/33163766/52630783-d34d3c00-2ec5-11e9-9bbb-990a0a69f773.PNG">
+
 
