@@ -5,6 +5,7 @@ Welcome to the Packman Game Readme!
 # What is Packman Game you ask??
 In this game you will be able to play on behalf of Eevee, your familiar and beloved character from the Pokemon TV series.
 <img width="180" alt="game1" src="https://user-images.githubusercontent.com/33163766/64167713-a0af6480-ce52-11e9-9883-2df83a0294ae.gif">
+
 The game itself takes place directly at Ariel University in Israel, where the role of our player is to avoid bumping into the black rectangles that on the map and from the ghosts that chase him throughout the game.
 
 # Wanna know how to play??
